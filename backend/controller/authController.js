@@ -58,6 +58,27 @@ export const register = async(req, res) => {
             finalSlug = `${baseSlug}-${counter}`;
         }
         const hashPassword = await bcrypt.hash(password, 10);
-        const user = await bcrypt
-    } catch {}
+        const user = await User.create({
+            name,
+            email: normalizedEmail,
+            password: hashPassword,
+            slug: finalSlug,
+            businessName: businessName || "",
+            timezone: timezone || 'Asia/Kolkata',
+        })
+
+        const token = createToken(user._id);
+        res.status(201).json({
+            message: "Registration successful",
+            token,
+            user: toUserResponse(user)
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error",
+            error: error.message
+        })
+    }
 }
+
+export const
