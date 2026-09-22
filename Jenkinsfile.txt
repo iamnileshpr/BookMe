@@ -1,0 +1,37 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                echo 'Code is already checked out by Jenkins'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh '''
+                    cd backend
+                    npm install
+                '''
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh '''
+                    cd backend
+                    npm test
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying BookMe application'
+            }
+        }
+
+    }
+}
