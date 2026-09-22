@@ -1,4 +1,5 @@
 // Jenkins trigger practiceimport request from 'supertest'
+import request from 'supertest'
 import app from './app.js'
 
 test('GET / should return API WORKING', async() => {
