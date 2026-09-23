@@ -35,6 +35,22 @@ pipeline {
                 '''
             }
         }
+        stage('Credential Test'){
+            steps{
+                withCredentials([
+                    String(
+                        credentialId:'demo-secret',
+                        variable:'MY_SECRET'
+
+                    )
+                ]){
+                    sh '''
+                    echo "===== CREDENTIAL TEST ====="
+                    echo "Secret length: ${#MY_SECRET}"
+                    '''
+                }
+            }
+        }
 
         stage('Deploy') {
             steps {
