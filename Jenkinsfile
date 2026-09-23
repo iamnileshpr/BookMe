@@ -38,7 +38,7 @@ pipeline {
         stage('Credential Test'){
             steps{
                 withCredentials([
-                    String(
+                    string(
                         credentialId:'demo-secret',
                         variable:'MY_SECRET'
 
