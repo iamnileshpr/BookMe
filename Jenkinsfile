@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent agent {
+    label 'linux'
+}
 
     parameters {
         choice(
@@ -35,36 +37,57 @@ pipeline {
                 '''
             }
         }
-stage('Credentials Test') {
-    steps {
-        withCredentials([
-            string(
-                credentialsId: 'demo-secret',
-                variable: 'MY_SECRET'
-            )
-        ]) {
+
+    stage('Create Artifacts'){
+        steps{
             sh '''
-                echo "===== CREDENTIAL TEST ====="
-                echo "Credential is available"
-                echo "Secret length: ${#MY_SECRET}"
+            echo "===== CREATE ARTIFACTS ====="
+            tar -czf bookme-backend.tar.gz backend
+            echo "Artifacts created: bookme-backend.tar.gz"
+            ls -lh
             '''
         }
     }
-}
-
-        stage('Deploy') {
-            steps {
+    stage('Credentials Test') {
+            withCredentials([
+                string(
+                    credentialsId: 'demo-secret',
+                    variable: 'MY_SECRET'
+                )
+            ]) {
                 sh '''
-                    echo "===== DEPLOY ====="
-                    echo "Deploying BookMe to $DEPLOY_ENV"
+                    echo "===== CREDENTIAL TEST ====="
+                    echo "Credential is available"
+                    echo "Secret length: ${#MY_SECRET}"
                 '''
             }
         }
     }
 
+    stage('Deploy') {
+    when {
+        expression {
+            params.DEPLOY_ENV == 'production'
+        }
+    }
+
+    steps {
+         input message: 'Do you want to deploy BookMe to production?', 
+         ok: 'Approve Deployment'
+        sh '''
+            echo "===== DEPLOY ====="
+            echo "Deploying BookMe to $DEPLOY_ENV"
+        '''
+    }
+}
+    }
+
     post {
         success {
             echo "Pipeline completed successfully"
+
+            archiveArtifacts artifacts: 'BookMe-backend.tar.gz',
+                         fingerprint: true
         }
 
         failure {
