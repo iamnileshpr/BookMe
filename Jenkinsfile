@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    environment {
+    APP_NAME = 'BookMe'
+    APP_ENV = 'development'
+}
 
     stages {
 
