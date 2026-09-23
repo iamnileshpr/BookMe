@@ -35,22 +35,22 @@ pipeline {
                 '''
             }
         }
-        stage('Credential Test'){
-            steps{
-                withCredentials([
-                    string(
-                        credentialId:'demo-secret',
-                        variable:'MY_SECRET'
-
-                    )
-                ]){
-                    sh '''
-                    echo "===== CREDENTIAL TEST ====="
-                    echo "Secret length: ${#MY_SECRET}"
-                    '''
-                }
-            }
+stage('Credentials Test') {
+    steps {
+        withCredentials([
+            string(
+                credentialsId: 'demo-secret',
+                variable: 'MY_SECRET'
+            )
+        ]) {
+            sh '''
+                echo "===== CREDENTIAL TEST ====="
+                echo "Credential is available"
+                echo "Secret length: ${#MY_SECRET}"
+            '''
         }
+    }
+}
 
         stage('Deploy') {
             steps {
