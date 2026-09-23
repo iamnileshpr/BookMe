@@ -1,21 +1,23 @@
 pipeline {
     agent any
-    environment {
-    APP_NAME = 'BookMe'
-    APP_ENV = 'development'
-}
+
+    parameters {
+        choice(
+            name: 'DEPLOY_ENV',
+            choices: ['development', 'staging', 'production'],
+            description: 'Select the environment'
+        )
+    }
 
     stages {
-
-        stage('Checkout') {
-            steps {
-                echo 'Code is already checked out by Jenkins'
-            }
-        }
 
         stage('Build') {
             steps {
                 sh '''
+                    echo "===== BUILD ====="
+                    echo "Application: BookMe"
+                    echo "Selected Environment: $DEPLOY_ENV"
+
                     cd backend
                     npm install
                 '''
@@ -25,6 +27,9 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
+                    echo "===== TEST ====="
+                    echo "Testing BookMe for $DEPLOY_ENV environment"
+
                     cd backend
                     npm test
                 '''
@@ -33,23 +38,25 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo 'Deploying BookMe application'
+                sh '''
+                    echo "===== DEPLOY ====="
+                    echo "Deploying BookMe to $DEPLOY_ENV"
+                '''
             }
         }
-
     }
+
     post {
-    success {
-        echo 'Pipeline completed successfully'
-    }
+        success {
+            echo "Pipeline completed successfully"
+        }
 
-    failure {
-        echo 'Pipeline failed'
-    }
+        failure {
+            echo "Pipeline failed"
+        }
 
-    always {
-        echo 'Pipeline execution finished'
+        always {
+            echo "Pipeline execution finished"
+        }
     }
 }
-}
-
