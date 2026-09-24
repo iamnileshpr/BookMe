@@ -64,6 +64,7 @@ pipeline {
         }
     }
     stage('Credentials Test') {
+        steps{
             withCredentials([
                 string(
                     credentialsId: 'demo-secret',
@@ -77,6 +78,7 @@ pipeline {
                 '''
             }
         }
+    }
     
 
     stage('Deploy') {
@@ -95,7 +97,7 @@ pipeline {
         '''
     }
 }
-    
+    }
 
     post {
         success {
@@ -112,6 +114,5 @@ pipeline {
         always {
             echo "Pipeline execution finished"
         }
-    }
     }
 }
