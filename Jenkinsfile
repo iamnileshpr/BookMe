@@ -77,7 +77,7 @@ pipeline {
                 '''
             }
         }
-    }
+    
 
     stage('Deploy') {
     when {
@@ -112,5 +112,6 @@ pipeline {
         always {
             echo "Pipeline execution finished"
         }
+    }
     }
 }
