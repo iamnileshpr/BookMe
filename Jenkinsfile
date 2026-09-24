@@ -12,6 +12,21 @@ pipeline {
     }
 
     stages {
+        stage('Check Agent') {
+    steps {
+        sh '''
+            echo "===== AGENT INFORMATION ====="
+            echo "Running on:"
+            hostname
+
+            echo "User:"
+            whoami
+
+            echo "Workspace:"
+            pwd
+        '''
+    }
+}
 
         stage('Build') {
             steps {
