@@ -53,16 +53,6 @@ pipeline {
             }
         }
 
-    stage('Create Artifacts'){
-        steps{
-            sh '''
-            echo "===== CREATE ARTIFACTS ====="
-            tar -czf bookme-backend.tar.gz backend
-            echo "Artifacts created: bookme-backend.tar.gz"
-            ls -lh
-            '''
-        }
-    }
     stage('Credentials Test') {
         steps{
             withCredentials([
@@ -97,6 +87,16 @@ pipeline {
         '''
     }
 }
+stage('Create Artifacts'){
+        steps{
+            sh '''
+            echo "===== CREATE ARTIFACTS ====="
+            tar -czf bookme-backend.tar.gz backend
+            echo "Artifacts created: bookme-backend.tar.gz"
+            ls -lh
+            '''
+        }
+    }
     }
 
     post {
