@@ -91,7 +91,7 @@ stage('Create Artifacts'){
         steps{
             sh '''
             echo "===== CREATE ARTIFACTS ====="
-            tar -czf bookme-backend.tar.gz backend
+            tar -czf BookMe-backend.tar.gz backend
             echo "Artifacts created: bookme-backend.tar.gz"
             ls -lh
             '''
