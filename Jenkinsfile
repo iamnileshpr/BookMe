@@ -27,6 +27,22 @@ pipeline {
         '''
     }
 }
+stage('Docker Check') {
+    steps {
+        sh '''
+            echo "===== DOCKER CHECK ====="
+
+            echo "Linux user:"
+            whoami
+
+            echo "Docker version:"
+            docker --version
+
+            echo "Running containers:"
+            docker ps
+        '''
+    }
+}
 
         stage('Build') {
             steps {
