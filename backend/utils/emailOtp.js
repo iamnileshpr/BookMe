@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
-import EmailOtp from "../model/EmailOtp"
+import EmailOtp from "../model/EmailOtp.js"
 import {
     sendOtpNotification
-} from "./bookingNotification"
+} from "./bookingNotification.js"
 
 const OTP_TTL_MINUTES = 10
 const MAX_ATTEMPTS = 5

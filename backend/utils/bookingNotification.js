@@ -5,7 +5,8 @@ const Brevo_Transactional_Email_Url = 'https://api.brevo.com/v3/smtp/email';
 
 const parseEmailAddress = (value = '') => {
     const match = value.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-    return match ? .[0] || '';
+    return (match && match[0]) || '';
+
 };
 
 const stripEmailAddress = (value = '') => {
@@ -34,7 +35,8 @@ const getPlatformSender = (senderName) => {
 };
 
 const getReplyTo = (replyTo) => {
-    const email = parseEmailAddress(replyTo ? .email || '');
+    const email = parseEmailAddress((replyTo && replyTo.email) || '');
+
     if (!email) return null;
 
     return {
@@ -189,169 +191,169 @@ const buildCompanyEmailHtml = ({ title, eyebrow = 'BookMe', intro, rows, accent 
         </body>
       </html>
     `;
+};
+
+const sendWithBrevo = async ({ to, subject, text, htmlContent, senderName, replyTo }) => {
+  const status = getEmailConfigStatus();
+  if (!status.configured) {
+    throw new Error(`BREVO email is not configured. Missing: ${status.missing.join(', ')}`);
+  }
+
+  const payload = {
+    sender: getPlatformSender(senderName),
+    to: [{ email: to }],
+    subject,
+    textContent: text,
+    htmlContent,
   };
-  
-  const sendWithBrevo = async ({ to, subject, text, htmlContent, senderName, replyTo }) => {
-    const status = getEmailConfigStatus();
-    if (!status.configured) {
-      throw new Error(`BREVO email is not configured. Missing: ${status.missing.join(', ')}`);
-    }
-  
-    const payload = {
-      sender: getPlatformSender(senderName),
-      to: [{ email: to }],
-      subject,
-      textContent: text,
-      htmlContent,
-    };
-  
-    const normalizedReplyTo = getReplyTo(replyTo);
-    if (normalizedReplyTo) {
-      payload.replyTo = normalizedReplyTo;
-    }
-  
-    const postData = JSON.stringify(payload);
-  
-    return new Promise((resolve, reject) => {
-      const req = https.request(BREVO_TRANSACTIONAL_EMAIL_URL, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'api-key': process.env.BREVO_API_KEY,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData)
+
+  const normalizedReplyTo = getReplyTo(replyTo);
+  if (normalizedReplyTo) {
+    payload.replyTo = normalizedReplyTo;
+  }
+
+  const postData = JSON.stringify(payload);
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(BREVO_TRANSACTIONAL_EMAIL_URL, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    }, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        let parsed = {};
+        try { parsed = JSON.parse(body); } catch (e) { }
+
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve({ sent: true, provider: 'brevo', messageId: parsed.messageId });
+        } else {
+          reject(new Error(getBrevoErrorMessage(res.statusCode, parsed)));
         }
-      }, (res) => {
-        let body = '';
-        res.on('data', chunk => body += chunk);
-        res.on('end', () => {
-          let parsed = {};
-          try { parsed = JSON.parse(body); } catch (e) {}
-  
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve({ sent: true, provider: 'brevo', messageId: parsed.messageId });
-          } else {
-            reject(new Error(getBrevoErrorMessage(res.statusCode, parsed)));
-          }
-        });
       });
-  
-      req.on('error', (e) => reject(e));
-      req.write(postData);
-      req.end();
     });
-  };
-  
-  const buildBookingMessage = ({ business, service, booking, type, recipientType }) => {
-    const businessName = business.businessName || business.name || 'BookMe';
-    const serviceName = service.name || 'appointment';
-    const appointmentTime = formatDateTime(booking, business.timezone);
-    const bookingStatus = String(booking.status || '').replace('_', ' ');
-    const paymentStatus = String(booking.paymentStatus || 'not_required').replace('_', ' ');
-    const amount = formatMoney(booking.amount || 0, booking.currency || 'inr');
-    const intro = buildIntro({ type, serviceName, recipientType });
-    const subject = buildSubject(type, businessName, recipientType);
-    const title = recipientType === 'provider' ? 'Booking update' : 'Booking confirmation';
-  
-    const rows = [
-      { label: 'Business', value: businessName },
-      { label: 'Service', value: serviceName },
-      { label: 'Customer', value: booking.customerName },
-      { label: 'Customer email', value: booking.customerEmail },
-      { label: 'When', value: appointmentTime },
-      { label: 'Status', value: bookingStatus },
-      { label: 'Payment', value: paymentStatus },
-      { label: 'Amount', value: amount },
-      { label: 'Booking ID', value: String(booking._id || '') },
-    ];
-  
-    const text = [
-      intro,
-      '',
-      ...rows.map((row) => `${row.label}: ${row.value}`),
-      booking.notes ? `Notes: ${booking.notes}` : '',
-      booking.customerCalendarUrl ? `Calendar link: ${booking.customerCalendarUrl}` : '',
-      '',
-      recipientType === 'provider'
-        ? 'This notification was sent by BookMe.'
-        : `Thank you for booking with ${businessName}.`,
-    ].filter(Boolean).join('\n');
-  
-    const htmlContent = buildCompanyEmailHtml({
-      title,
-      eyebrow: businessName,
-      intro,
-      rows,
-      accent: business.brandAccent || '#7D57F5',
-      notes: booking.notes,
-      calendarUrl: recipientType === 'customer' ? booking.customerCalendarUrl : '',
-      footer: recipientType === 'provider'
-        ? 'This notification was sent by BookMe because a customer booked through your booking page.'
-        : `Thank you for booking with ${businessName}. Please keep this email for your records.`,
+
+    req.on('error', (e) => reject(e));
+    req.write(postData);
+    req.end();
+  });
+};
+
+const buildBookingMessage = ({ business, service, booking, type, recipientType }) => {
+  const businessName = business.businessName || business.name || 'BookMe';
+  const serviceName = service.name || 'appointment';
+  const appointmentTime = formatDateTime(booking, business.timezone);
+  const bookingStatus = String(booking.status || '').replace('_', ' ');
+  const paymentStatus = String(booking.paymentStatus || 'not_required').replace('_', ' ');
+  const amount = formatMoney(booking.amount || 0, booking.currency || 'inr');
+  const intro = buildIntro({ type, serviceName, recipientType });
+  const subject = buildSubject(type, businessName, recipientType);
+  const title = recipientType === 'provider' ? 'Booking update' : 'Booking confirmation';
+
+  const rows = [
+    { label: 'Business', value: businessName },
+    { label: 'Service', value: serviceName },
+    { label: 'Customer', value: booking.customerName },
+    { label: 'Customer email', value: booking.customerEmail },
+    { label: 'When', value: appointmentTime },
+    { label: 'Status', value: bookingStatus },
+    { label: 'Payment', value: paymentStatus },
+    { label: 'Amount', value: amount },
+    { label: 'Booking ID', value: String(booking._id || '') },
+  ];
+
+  const text = [
+    intro,
+    '',
+    ...rows.map((row) => `${row.label}: ${row.value}`),
+    booking.notes ? `Notes: ${booking.notes}` : '',
+    booking.customerCalendarUrl ? `Calendar link: ${booking.customerCalendarUrl}` : '',
+    '',
+    recipientType === 'provider'
+      ? 'This notification was sent by BookMe.'
+      : `Thank you for booking with ${businessName}.`,
+  ].filter(Boolean).join('\n');
+
+  const htmlContent = buildCompanyEmailHtml({
+    title,
+    eyebrow: businessName,
+    intro,
+    rows,
+    accent: business.brandAccent || '#7D57F5',
+    notes: booking.notes,
+    calendarUrl: recipientType === 'customer' ? booking.customerCalendarUrl : '',
+    footer: recipientType === 'provider'
+      ? 'This notification was sent by BookMe because a customer booked through your booking page.'
+      : `Thank you for booking with ${businessName}. Please keep this email for your records.`,
+  });
+
+  return { subject, text, htmlContent };
+};
+
+export const sendTransactionalEmail = sendWithBrevo;
+
+export const sendBookingNotification = async ({ business, service, booking, type = 'confirmed' }) => {
+  const configStatus = getEmailConfigStatus();
+  if (!configStatus.configured) {
+    return {
+      skipped: true,
+      reason: `BREVO email is not configured. Missing: ${configStatus.missing.join(', ')}`,
+    };
+  }
+
+  const recipients = [
+    { email: booking.customerEmail, type: 'customer' },
+    { email: business.email, type: 'provider' },
+  ].filter((recipient, index, list) => (
+    recipient.email && list.findIndex((candidate) => candidate.email === recipient.email) === index
+  ));
+
+  const results = [];
+  for (const recipient of recipients) {
+    const message = buildBookingMessage({
+      business,
+      service,
+      booking,
+      type,
+      recipientType: recipient.type,
     });
-  
-    return { subject, text, htmlContent };
-  };
-  
-  export const sendTransactionalEmail = sendWithBrevo;
-  
-  export const sendBookingNotification = async ({ business, service, booking, type = 'confirmed' }) => {
-    const configStatus = getEmailConfigStatus();
-    if (!configStatus.configured) {
-      return {
-        skipped: true,
-        reason: `BREVO email is not configured. Missing: ${configStatus.missing.join(', ')}`,
-      };
-    }
-  
-    const recipients = [
-      { email: booking.customerEmail, type: 'customer' },
-      { email: business.email, type: 'provider' },
-    ].filter((recipient, index, list) => (
-      recipient.email && list.findIndex((candidate) => candidate.email === recipient.email) === index
-    ));
-  
-    const results = [];
-    for (const recipient of recipients) {
-      const message = buildBookingMessage({
-        business,
-        service,
-        booking,
-        type,
-        recipientType: recipient.type,
-      });
-  
-      const result = await sendWithBrevo({
-        to: recipient.email,
-        senderName: business.businessName || business.name || 'BookMe',
-        replyTo: recipient.type === 'customer'
-          ? { email: business.email, name: business.businessName || business.name || 'Provider' }
-          : { email: booking.customerEmail, name: booking.customerName || 'Customer' },
-        ...message,
-      });
-      results.push({ email: recipient.email, type: recipient.type, ...result });
-    }
-  
-    return { sent: true, provider: 'brevo', recipients: results };
-  };
-  
-  export const sendOtpNotification = async ({ email, code, purpose }) => {
-    const title = purpose === 'registration' ? 'Verify your BookMe account' : 'Verify your booking email';
-    const intro = `Use this verification code to continue. The code expires in 10 minutes.`;
-    const htmlContent = buildCompanyEmailHtml({
-      title,
-      intro,
-      rows: [
-        { label: 'Verification code', value: code },
-        { label: 'Expires in', value: '10 minutes' },
-      ],
-      footer: 'If you did not request this code, you can ignore this email.',
+
+    const result = await sendWithBrevo({
+      to: recipient.email,
+      senderName: business.businessName || business.name || 'BookMe',
+      replyTo: recipient.type === 'customer'
+        ? { email: business.email, name: business.businessName || business.name || 'Provider' }
+        : { email: booking.customerEmail, name: booking.customerName || 'Customer' },
+      ...message,
     });
-  
-    return sendWithBrevo({
-      to: email,
-      subject: title,
-      text: `${intro}\n\nVerification code: ${code}\nExpires in: 10 minutes`,
-      htmlContent,
-    });
-  };
+    results.push({ email: recipient.email, type: recipient.type, ...result });
+  }
+
+  return { sent: true, provider: 'brevo', recipients: results };
+};
+
+export const sendOtpNotification = async ({ email, code, purpose }) => {
+  const title = purpose === 'registration' ? 'Verify your BookMe account' : 'Verify your booking email';
+  const intro = `Use this verification code to continue. The code expires in 10 minutes.`;
+  const htmlContent = buildCompanyEmailHtml({
+    title,
+    intro,
+    rows: [
+      { label: 'Verification code', value: code },
+      { label: 'Expires in', value: '10 minutes' },
+    ],
+    footer: 'If you did not request this code, you can ignore this email.',
+  });
+
+  return sendWithBrevo({
+    to: email,
+    subject: title,
+    text: `${intro}\n\nVerification code: ${code}\nExpires in: 10 minutes`,
+    htmlContent,
+  });
+};
