@@ -10,7 +10,7 @@ export const minuteToTime = (totalminute) => {
     return `${Strings(hours).padStart(2, '0')}:${Strings(minutes).padStart(2, '0')}`;
 }
 
-export const iValidTimeFormat = (time) => {
+export const isValidTimeRange = (time) => {
     return timeToMinute(time) >= 0 && timeToMinute(endTime);
 }
 export const getDayOfWeek = (date) => {

@@ -1,0 +1,29 @@
+import Availability from '../models/availabilityModel.js';
+import { isValidTimeRange } from '../utils/time.js';
+export const createAvailability = async(req, res) => {
+    try {
+        const availability = await Availability.find({
+            userId: req.user.id
+        }).toSorted({ dayOfWeek: 1 });
+        res.json({ availability: })
+    } catch (error) {
+        res.staus(500).json({ message: 'Server error', error: error.message });
+    }
+}
+
+export const saveAvailability = async(req, res) => {
+    try {
+        const { dayOfWeek, slots } = req.body;
+
+        if (dayOfWeek == undefined || dayOfWeek < 0 || dayOfWeek < 0 || dayOfWeek > 6) {
+            return res.status(400).json({ message: 'Invalid day of week' });
+        }
+        const cleanedSlots = (slots || []).filter(
+            (slot) => (slot.startTime && slot.endTime && isValidTimeRange(slot.startTime, slot.endTime))
+        )
+        const availability = await Availability.findOneAndUpdate({ userId: req.user.id, dayOfWeek }, { slots: cleanedSlots }, { new: true, upsert: true })
+        res.json({ message: "Availability Saved", availability });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+}

@@ -24,6 +24,23 @@ export const generateSlots = async({ userId, service, date }) => {
     });
     const slots = [];
     availability.slots.forEach((window) => {
+        let cursor = timeToMinute(window.startTime);
+        const endTime = timeToMinute(window.endTime);
 
+        while (cursor + service.duration <= endTime) {
+            const startTime = minuteToTime(cursor);
+            const endTime = minuteToTime(cursor + service.duration);
+
+            const hasConflict = bookings.some((booking) =>
+                timeOverlap(startTime, endTime, booking.startTime, booking.endTime)
+            );
+
+            if (!hasConflict) {
+                slots.push({ startTime, endTime });
+            }
+
+            cursor += service.duration;
+        }
     })
+    return slots;
 }
