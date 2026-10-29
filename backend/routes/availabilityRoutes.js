@@ -1,5 +1,5 @@
 import express from "express"
-import { listAvailability, createAvailability, updateAvailability, deleteAvailability } from "../controllers/availabilityController.js";
+import { listAvailability } from "../controller/availabilityController.js";
 import auth from '../middleware/auth.js'
 import { saveAvailability } from "../controller/availabilityController.js";
 

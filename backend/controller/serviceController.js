@@ -1,4 +1,4 @@
-import Service from "../model/Service";
+import Service from "../model/Service.js";
 export const listService = async(req, res) => {
     try {
         const service = (await Service.find({ userId: req.user.id, isDeleted: { $ne: true } })).toSorted({ createdAt: -1 });

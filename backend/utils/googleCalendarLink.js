@@ -1,7 +1,7 @@
-import { google } from "googlepis";
+import { google } from "googleapis";
 import {
-    buildCustomCalendarLink,
-} from './calendarLinkBuilder';
+    buildCustomerCalendarLink,
+} from './calendarLink.js';
 
 const getOutClient = () => {
     return new google.auth.Oauth2(

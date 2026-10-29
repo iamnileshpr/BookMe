@@ -101,3 +101,5 @@ const bookingSchema = new mongoose.Schema({
         default: 0,
     },
 }, { timestamps: true });
+
+export default bookingSchema;
