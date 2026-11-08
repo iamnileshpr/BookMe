@@ -1,7 +1,7 @@
 import WalletTransaction from "../model/WalletTransaction.js";
 import withdrawl from "../model/Withdraw.js";
 
-export const cteateBookingPayoutTransaction = async(booking, description) => {
+export const createBookingPayoutTransaction = async(booking, description) => {
     if (!(booking == null ? void 0 : booking.providerPayoutAmount)) return null;
     try {
         return await WalletTransaction.create({

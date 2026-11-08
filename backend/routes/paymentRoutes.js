@@ -6,6 +6,8 @@ const router = express.Router();
 
 router.get('/', auth, getPaymentOverview);
 router.get('/payout-details', auth, updatePayoutDetails);
-router('/withdrawls', auth, requestWithdrawal)
+router.get('/withdrawls', auth, requestWithdrawal)
+
+
 
 export default router;

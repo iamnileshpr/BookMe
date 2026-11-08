@@ -25,12 +25,12 @@ const availabilitySchema = new mongoose.Schema({
     },
     slot: {
         type: [slotSchema],
-        defaut: [],
+        default: [],
     }
 }, { timestamps: true });
 
 availabilitySchema.index({ userId: 1, dayOfWeek: 1 }, { unique: true });
 
-const Availability = mongoose.model('Availability', availabilitySchema);
+const Availability = mongoose.models.Availability || mongoose.model("Availability", availabilitySchema);
 
 export default Availability;

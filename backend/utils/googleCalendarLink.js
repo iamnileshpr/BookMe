@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import {
-    buildCustomerCalendarLink,
+    buildCustomerCalendarUrl,
 } from './calendarLink.js';
 
 const getOutClient = () => {
