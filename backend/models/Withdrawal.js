@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const withdrawlSchema = new mongoose.Schema({
+const withdrawalSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -10,7 +10,7 @@ const withdrawlSchema = new mongoose.Schema({
     amount: {
         type: Number,
         required: true,
-        min: 1
+        min: 1,
     },
     currency: {
         type: String,
@@ -18,7 +18,6 @@ const withdrawlSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        trim: true,
         enum: ['pending', 'processing', 'paid', 'rejected'],
         default: 'pending',
         index: true,
@@ -28,15 +27,15 @@ const withdrawlSchema = new mongoose.Schema({
         bankName: String,
         accountLast4: String,
         ifsc: String,
-        upId: String
+        upiId: String,
     },
     adminNote: {
         type: String,
         default: '',
         trim: true,
-    }
+    },
 }, { timestamps: true });
 
-const Withdrawl = mongoose.model('Withdrawl', withdrawlSchema);
+const Withdrawal = mongoose.model('Withdrawal', withdrawalSchema);
 
-export default Withdrawl;
+export default Withdrawal;

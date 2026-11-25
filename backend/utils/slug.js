@@ -1,10 +1,10 @@
-const slugfy = (value) => {
+const slugify = (value) => {
     return value
-        .tolowerCase()
+        .toLowerCase()
         .trim()
-        .replace(/[^a-z0-9\s-]/g, '') // Remove all non-word characters
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/-+/g, '-') // Replace multiple hyphens with a single hyphen
-}
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+};
 
-export default slugfy;
+export default slugify;

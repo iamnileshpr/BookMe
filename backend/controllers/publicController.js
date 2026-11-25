@@ -1,19 +1,20 @@
-import Booking from '../model/Booking.js';
-import Service from '../model/Service.js';
-import User from '../model/User.js';
+import Booking from '../models/Booking.js';
+import Service from '../models/Service.js';
+import User from '../models/UserNew.js';
 import { buildCustomerCalendarUrl } from '../utils/calendarLink.js';
-import { createBookingCalendarEvent } from '../utils/googleCalendarLink.js';
-import { sendBookingNotification } from '../utils/bookingNotification.js';
+import { createBookingCalendarEvent } from '../utils/googleCalendar.js';
+import { sendBookingNotification } from '../utils/bookingNotifications.js';
 import { requestEmailOtp, verifyEmailOtp } from '../utils/emailOtp.js';
 import { generateSlots } from '../utils/slotGenerator.js';
 import { getStripe, toStripeAmount } from '../utils/stripe.js';
 import { calculatePlatformSplit } from '../utils/money.js';
-import { timeOverlap } from '../utils/overLAP.js';
-import { createBookingPayoutTransaction } from '../utils/Wallet.js';
+import { timesOverlap } from '../utils/overlap.js';
+import { createBookingPayoutTransaction } from '../utils/wallet.js';
 
 const getBusinessBySlug = async(slug) => {
     return User.findOne({ slug }).select('-password');
-}
+};
+
 const toPublicBusiness = (business) => ({
     id: business._id,
     name: business.name,
@@ -24,87 +25,94 @@ const toPublicBusiness = (business) => ({
     brandAccent: business.brandAccent,
     timezone: business.timezone,
     googleCalendarConnected: business.googleCalendarConnected,
-})
-const holdWindowStart = () => Date(Date.now() - 30 * 60 * 1000);
+});
+
+const holdWindowStart = () => new Date(Date.now() - 30 * 60 * 1000);
+
 const findActiveSlotBookings = ({ userId, date }) => {
     return Booking.find({
         userId,
         date,
-        $or: [{
-                status: 'confirmed'
-            },
+        $or: [
+            { status: 'confirmed' },
             {
                 status: 'pending_payment',
                 createdAt: { $gte: holdWindowStart() },
             },
         ],
-    })
-}
-export const getPublicBuisness = async(req, res) => {
+    });
+};
+
+export const getPublicBusiness = async(req, res) => {
     try {
-        const business = await getBusinessBySlug(req.params.slug)
+        const business = await getBusinessBySlug(req.params.slug);
+
         if (!business) {
-            return res.status(400).json({ message: 'Buisness not found' })
+            return res.status(404).json({ message: 'Business not found' });
         }
+
         const services = await Service.find({
-            userId: buisness._d,
-            isActice: true,
+            userId: business._id,
+            isActive: true,
             isDeleted: { $ne: true },
-        }).sort({ name: 1 })
-        res.json({
-            buisness: toPublicBusiness(business),
-            services
-        })
+        }).sort({ name: 1 });
+        res.json({ business: toPublicBusiness(business), services });
     } catch (error) {
-        res.status(500).json({ message: 'server error', error: error.message })
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
-}
+};
 
 export const getPublicSlots = async(req, res) => {
     try {
         const { date, serviceId } = req.query;
+
         if (!date || !serviceId) {
-            return res.status(400).json({ message: 'Missing required parameters' });
+            return res.status(400).json({ message: 'Date and service are required' });
         }
-        const buisness = await getBusinessBySlug(req.params.slug);
-        if (!buisness) {
-            return res.status(400).json({ message: 'Buisness not found' });
+
+        const business = await getBusinessBySlug(req.params.slug);
+        if (!business) {
+            return res.status(404).json({ message: 'Business not found' });
         }
+
         const service = await Service.findOne({
             _id: serviceId,
-            userId: buisness._id,
-            isActice: true,
-            isDeleted: { $ne: true }
-        })
+            userId: business._id,
+            isActive: true,
+            isDeleted: { $ne: true },
+        });
         if (!service) {
-            return res.status(400).json({ message: 'Missing required parameters' });
+            return res.status(404).json({ message: 'Service not found' });
         }
-        const slots = await generateSlots({ userId: buisness._id, service, date })
-        res.json({ slots })
+
+        const slots = await generateSlots({ userId: business._id, service, date });
+        res.json({ slots });
     } catch (error) {
-        res.status(500).json({ message: 'server error', error: error.message })
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
-}
+};
 
 export const requestPublicBookingOtp = async(req, res) => {
     try {
         const { customerEmail } = req.body;
-        const normalizedEmail = customerEmail.toLowerCase().trim();
+        const normalizedEmail = customerEmail && customerEmail.toLowerCase().trim();
+
         if (!normalizedEmail) {
-            return res.status(400).json({ message: 'Missing required parameters' });
+            return res.status(400).json({ message: 'Customer email is required' });
         }
 
-        const buisness = await getBusinessBySlug(req.params.slug);
-        if (!buisness) {
-            return res.status(400).json({ message: 'Buisness not found' });
+        const business = await getBusinessBySlug(req.params.slug);
+        if (!business) {
+            return res.status(404).json({ message: 'Business not found' });
         }
 
-        const result = await requestEmailOtp({ email: normalizedEmail, purpose: 'booking', });
-        res.json({ message: 'OTP sent to email', result });
+        const result = await requestEmailOtp({ email: normalizedEmail, purpose: 'booking' });
+        res.json({ message: 'Verification code sent', result });
     } catch (error) {
-        res.status(503).json({ message: 'server error', error: error.message })
+        res.status(503).json({ message: error.message });
     }
-}
+};
+
 export const verifyPublicBookingOtp = async(req, res) => {
     try {
         const { customerEmail, emailOtp } = req.body;
@@ -266,7 +274,7 @@ export const createPublicBooking = async(req, res) => {
             checkoutUrl: session.url,
         });
     } catch (error) {
-        const errorMsg = (error && error.type && typeof error.type.includes === 'function' && error.type.includes('Stripe')) ?
+        const errorMsg = error.type && error.type.includes('Stripe') ?
             ((error.raw && error.raw.message) || error.message) :
             'Server error: ' + error.message;
         res.status(error.statusCode || 500).json({ message: errorMsg, error: error.message });

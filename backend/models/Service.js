@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const serviceSchema = new mongoose.Schema({
     userId: {
@@ -19,27 +19,28 @@ const serviceSchema = new mongoose.Schema({
     },
     price: {
         type: Number,
-        required: true,
+        default: 0,
         min: 0,
     },
     description: {
         type: String,
-        default: ' ',
+        default: '',
         trim: true,
     },
     icon: {
         type: String,
-        default: 'default-icon.png',
-
+        default: 'C1.png',
     },
     isActive: {
         type: Boolean,
         default: true,
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false,
         index: true,
-    }
-}, {
-    timestamps: true
-});
+    },
+}, { timestamps: true });
 
 const Service = mongoose.model('Service', serviceSchema);
 

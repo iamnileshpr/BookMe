@@ -1,19 +1,20 @@
-import Service from "../model/Service.js";
-export const listService = async(req, res) => {
+import Service from '../models/Service.js';
+
+export const listServices = async(req, res) => {
     try {
-        const service = (await Service.find({ userId: req.user.id, isDeleted: { $ne: true } })).toSorted({ createdAt: -1 });
-        res.json({ service });
+        const services = await Service.find({ userId: req.user.id, isDeleted: { $ne: true } }).sort({ createdAt: -1 });
+        res.json({ services });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
-}
+};
 
 export const createService = async(req, res) => {
     try {
         const { name, duration, price, description, icon } = req.body;
 
         if (!name || !duration) {
-            return res.status(400).json({ message: 'Name, duration, and price are required' });
+            return res.status(400).json({ message: 'Service name and duration are required' });
         }
 
         const service = await Service.create({
@@ -21,14 +22,15 @@ export const createService = async(req, res) => {
             name,
             duration,
             price: price || 0,
-            description,
-            icon: icon || 'c1.png'
+            description: description || '',
+            icon: icon || 'C1.png',
         });
-        res.status(201).json({ message: 'Service created successfully', service });
+
+        res.status(201).json({ message: 'Service created', service });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
-}
+};
 
 export const updateService = async(req, res) => {
     try {
@@ -58,11 +60,13 @@ export const updateService = async(req, res) => {
 export const deleteService = async(req, res) => {
     try {
         const service = await Service.findOneAndUpdate({ _id: req.params.id, userId: req.user.id, isDeleted: { $ne: true } }, { isDeleted: true, isActive: false }, { new: true });
+
         if (!service) {
             return res.status(404).json({ message: 'Service not found' });
         }
-        res.json({ message: 'Service deleted', service })
+
+        res.json({ message: 'Service deleted', service });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
-}
+};

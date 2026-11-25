@@ -1,4 +1,5 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
+
 const bookingSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -102,4 +103,6 @@ const bookingSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-export default bookingSchema;
+const Booking = mongoose.model('Booking', bookingSchema);
+
+export default Booking;

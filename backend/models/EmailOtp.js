@@ -1,37 +1,38 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const emailOtpSchema = new mongoose.Schema({
     email: {
-
         type: String,
         required: true,
         trim: true,
         lowercase: true,
-        index: true
+        index: true,
     },
-    puropse: {
+    purpose: {
         type: String,
         enum: ['registration', 'booking'],
+        required: true,
+        index: true,
     },
     codeHash: {
         type: String,
-        required: true
+        required: true,
     },
     attempts: {
         type: Number,
-        default: 0
+        default: 0,
     },
-    expireAt: {
+    expiresAt: {
         type: Date,
         required: true,
-        index: { expires: 0 }
+        index: { expires: 0 },
     },
-    consumeAt: {
+    consumedAt: {
         type: Date,
-        default: null
-    }
-}, { timestamps: true })
+        default: null,
+    },
+}, { timestamps: true });
 
-const EmailOtp = mongoose.model('EmailOtp', emailOtpSchema)
+const EmailOtp = mongoose.model('EmailOtp', emailOtpSchema);
 
-export default EmailOtp
+export default EmailOtp;

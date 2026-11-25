@@ -1,13 +1,13 @@
-import Availability from "../model/Availability.js";
-import Booking from "../model/Booking.js";
-import { timeOverlap } from "./overLAP.js";
-import { getDayOfWeek, minuteToTime, timeToMinute } from "./time.js";
+import Availability from '../models/Availability.js';
+import Booking from '../models/Booking.js';
+import { timesOverlap } from './overlap.js';
+import { getDayOfWeek, minutesToTime, timeToMinutes } from './time.js';
 
 export const generateSlots = async({ userId, service, date }) => {
     const dayOfWeek = getDayOfWeek(date);
     const availability = await Availability.findOne({ userId, dayOfWeek });
 
-    if (!availability || availability.slot.lenght == 0) {
+    if (!availability || availability.slots.length === 0) {
         return [];
     }
 
@@ -17,23 +17,24 @@ export const generateSlots = async({ userId, service, date }) => {
         $or: [
             { status: 'confirmed' },
             {
-                status: 'confirmed',
-                createdAt: { $gte: new Date(Date.now() - 30 * 60 * 1000) }
+                status: 'pending_payment',
+                createdAt: { $gte: new Date(Date.now() - 30 * 60 * 1000) },
             },
         ],
     });
+
     const slots = [];
+
     availability.slots.forEach((window) => {
-        let cursor = timeToMinute(window.startTime);
-        const endTime = timeToMinute(window.endTime);
+        let cursor = timeToMinutes(window.startTime);
+        const end = timeToMinutes(window.endTime);
 
-        while (cursor + service.duration <= endTime) {
-            const startTime = minuteToTime(cursor);
-            const endTime = minuteToTime(cursor + service.duration);
-
-            const hasConflict = bookings.some((booking) =>
-                timeOverlap(startTime, endTime, booking.startTime, booking.endTime)
-            );
+        while (cursor + service.duration <= end) {
+            const startTime = minutesToTime(cursor);
+            const endTime = minutesToTime(cursor + service.duration);
+            const hasConflict = bookings.some((booking) => (
+                timesOverlap(startTime, endTime, booking.startTime, booking.endTime)
+            ));
 
             if (!hasConflict) {
                 slots.push({ startTime, endTime });
@@ -41,6 +42,7 @@ export const generateSlots = async({ userId, service, date }) => {
 
             cursor += service.duration;
         }
-    })
+    });
+
     return slots;
-}
+};

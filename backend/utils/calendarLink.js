@@ -1,17 +1,14 @@
 const toGoogleDateTime = (date, time) => {
-    // Strips dashes from date and colons from time, then adds seconds '00'
     return `${date.replaceAll('-', '')}T${time.replace(':', '')}00`;
-}
+};
 
-export const buildCustomerCalendarUrl = ({ buiness, service, booking }) => {
+export const buildCustomerCalendarUrl = ({ business, service, booking }) => {
     const params = new URLSearchParams({
         action: 'TEMPLATE',
-        text: `${service.name} with ${(buiness.name || buiness.buinessName)}`,
+        text: `${service.name} with ${business.businessName || business.name}`,
         dates: `${toGoogleDateTime(booking.date, booking.startTime)}/${toGoogleDateTime(booking.date, booking.endTime)}`,
-        details: booking.notes || `Booking with ${buiness.buinessName || buiness.name}`,
+        details: booking.notes || `Booking with ${business.businessName || business.name}`,
     });
 
-    return `https://google.com{params.toString()}`;
-}
-
-export default buildCustomerCalendarUrl;
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+};

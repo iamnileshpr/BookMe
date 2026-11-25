@@ -1,15 +1,16 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import Booking from '../model/Booking.js';
-import User from '../model/User.js';
-import WalletTransaction from '../model/WalletTransaction.js';
-import Withdrawl from '../model/Withdraw.js';
+import Booking from '../models/Booking.js';
+import User from '../models/UserNew.js';
+import WalletTransaction from '../models/WalletTransaction.js';
+import Withdrawal from '../models/Withdrawal.js';
 
 const createAdminToken = (email) => {
     return jwt.sign({ email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
-}
+};
 
-const termnalWithdrawalStatuses = ['paid', 'rejected'];
+const terminalWithdrawalStatuses = ['paid', 'rejected'];
+
 const sumByKey = (rows) => rows.reduce((acc, row) => ({...acc, [row._id]: row.total }), {});
 
 const getAdminSummary = async() => {
@@ -97,10 +98,11 @@ const getAdminSummary = async() => {
 
 const isAdminPasswordValid = async(password) => {
     if (process.env.ADMIN_PASSWORD_HASH) {
-        return await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
+        return bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
     }
+
     return password === process.env.ADMIN_PASSWORD;
-}
+};
 
 export const loginAdmin = async(req, res) => {
     try {
@@ -108,25 +110,27 @@ export const loginAdmin = async(req, res) => {
         const adminEmail = (process.env.ADMIN_EMAIL || '').toLowerCase().trim();
 
         if (!adminEmail || (!process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASSWORD_HASH)) {
-            return res.status(503).json({ message: 'Admin email and password are required' });
+            return res.status(503).json({ message: 'Admin login is not configured' });
         }
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required' });
+
+        if (!email || !password || email.toLowerCase().trim() !== adminEmail) {
+            return res.status(401).json({ message: 'Invalid admin credentials' });
         }
 
         const passwordValid = await isAdminPasswordValid(password);
-        if (!passwordValid || email.toLowerCase().trim() !== adminEmail) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+        if (!passwordValid) {
+            return res.status(401).json({ message: 'Invalid admin credentials' });
         }
+
         res.json({
-            message: 'admin logged in successfully',
+            message: 'Admin logged in successfully',
             token: createAdminToken(adminEmail),
-            admin: { email: adminEmail }
+            admin: { email: adminEmail },
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message })
+        res.status(500).json({ message: 'Server error', error: error.message });
     }
-}
+};
 
 export const getAdminDashboard = async(req, res) => {
     try {

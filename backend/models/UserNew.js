@@ -1,100 +1,99 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
     },
     email: {
         type: String,
         required: true,
         unique: true,
         trim: true,
-        lowercase: true
+        lowercase: true,
     },
     password: {
         type: String,
         required: true,
-        minlength: 6
+        minlength: 6,
     },
     slug: {
         type: String,
         required: true,
         unique: true,
         trim: true,
-        uniqque: true,
-        lowercase: true
+        lowercase: true,
     },
-    buisnessName: {
+    businessName: {
         type: String,
-        default: "",
-        trim: true
+        default: '',
+        trim: true,
     },
-    buisnessDescription: {
+    businessDescription: {
         type: String,
-        default: "",
-        trim: true
+        default: '',
+        trim: true,
     },
-    brandTeme: {
+    brandTheme: {
         type: String,
         enum: ['emerald', 'indigo', 'rose', 'amber', 'slate'],
-        default: 'emerald'
+        default: 'emerald',
     },
     brandAccent: {
         type: String,
-        default: '#47857'
+        default: '#047857',
     },
-    timeZone: {
+    timezone: {
         type: String,
-        default: 'Asia/Kolkata'
+        default: 'Asia/Kolkata',
     },
     googleRefreshToken: {
         type: String,
-        default: ''
+        default: '',
     },
     googleCalendarConnected: {
         type: Boolean,
-        default: false
+        default: false,
     },
     googleCalendarId: {
         type: String,
-        default: 'primary'
+        default: 'primary',
     },
     payoutDetails: {
         accountHolderName: {
             type: String,
             default: '',
-            trim: true
+            trim: true,
         },
         bankName: {
             type: String,
             default: '',
+            trim: true,
         },
         accountLast4: {
             type: String,
-            default: ''
+            default: '',
         },
         ifsc: {
             type: String,
             default: '',
+            trim: true,
             uppercase: true,
-            trim: true
         },
         upiId: {
             type: String,
             default: '',
-            trim: true
+            trim: true,
         },
-        isCompleted: {
+        isComplete: {
             type: Boolean,
-            default: false
+            default: false,
         },
         updatedAt: {
             type: Date,
-        }
-
-    }
+        },
+    },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

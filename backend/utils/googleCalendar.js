@@ -1,33 +1,30 @@
-import { google } from "googleapis";
-import {
-    buildCustomerCalendarUrl,
-} from './calendarLink.js';
+import { google } from 'googleapis';
+import { buildCustomerCalendarUrl } from './calendarLink.js';
 
-const getOutClient = () => {
-    return new google.auth.Oauth2(
+const getOAuthClient = () => {
+    return new google.auth.OAuth2(
         process.env.GOOGLE_CLIENT_ID,
         process.env.GOOGLE_CLIENT_SECRET,
-        process.env.GOOGLE_REDIRECT_URI,
-    )
-}
+        process.env.GOOGLE_REDIRECT_URI
+    );
+};
 
 export const getGoogleAuthUrl = (userId) => {
-    const Oauth2Client = getOAuthClient();
+    const oauth2Client = getOAuthClient();
 
-    return Oauth2Client.generateAuthUrl({
+    return oauth2Client.generateAuthUrl({
         access_type: 'offline',
-        scope: ['https://www.googleapis.com/auth/calendar'],
-        promt: 'consent',
-        state: String(userId)
-    })
-}
+        prompt: 'consent',
+        scope: ['https://www.googleapis.com/auth/calendar.events'],
+        state: String(userId),
+    });
+};
 
 export const getGoogleTokens = async(code) => {
-    const Oauth2Client = getOutClient();
-    const { tokens } = await Oauth2Client.getToken(code);
-
+    const oauth2Client = getOAuthClient();
+    const { tokens } = await oauth2Client.getToken(code);
     return tokens;
-}
+};
 
 export const createBookingCalendarEvent = async({ business, service, booking }) => {
     const customerCalendarUrl = buildCustomerCalendarUrl({ business, service, booking });

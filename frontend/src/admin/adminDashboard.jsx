@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getAdminDashboard, updateWithdrawalStatus } from "../api/admin.js";
 import {
-    Users, Wallet, TrendingUp, Landmark, checkCircle,XOctagon,Clock,UserCheck,ShieldCheck
+    Users, Wallet, TrendingUp, Landmark, CheckCircle,XOctagon,Clock,UserCheck,ShieldCheck
 } from "lucide-react"
 import logo from "../assets/logo.png";
 import { adminDashboardPageStyles as s } from "../assets/dummyStyles.js";
@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
       const WithdrawalConfirmIcon =
         pendingWithdrawalAction?.status === "rejected" ? XOctagon : ShieldCheck;
       const isConfirmingWithdrawal =
-        pendingWithdrawal && updatingWithdrawalId === pendingWithdrawal._id;
+        pendingWithdrawal && updateWithdrawalId === pendingWithdrawal._id;
     
       // Helpers for dynamic classes from styles
       const getPayoutStatusClass = (isComplete) =>
@@ -120,7 +120,7 @@ export default function AdminDashboardPage() {
         {
           label: "Paid Bookings",
           value: summary.paidBookings || 0,
-          icon: checkCircle,
+          icon: CheckCircle,
           bg: s.statBg2,
           c: s.statColor2,
         },
@@ -160,9 +160,15 @@ export default function AdminDashboardPage() {
                     <div className={s.logoRow}>
                         <img src={logo} className={s.logoImg} />
                         <Link to="/admin/dashboard" className={s.headerActions}>
+                            BookMe <span className={s.logoAccent}Admin></span>
+                        </Link>
+                        
+                    </div>
+                    <div className={s.headerActions}>
+                        <Link to="/" className={s.clientAppLink}>
                             Client App
                         </Link>
-                        <button type="button" onCanPlay={logout} className={s.logoutButton}>
+                    <button type="button" onCanPlay={logout} className={s.logoutButton}>
                             Log Out
                         </button>
                     </div>
@@ -179,7 +185,7 @@ export default function AdminDashboardPage() {
                     {message && <div className={s.messageBanner}>{message}</div>}
                 </section>
                 <section className={s.statsGrid}>
-                    {statCards.map((stat, i) => {
+                    {statCards.map((stat, i) => (
                         <div key={i} className={s.statCard}>
                             <div className={`${s.statIconContainer}${stat.bg}${stat.c}`}>
                                 <stat.icon className={s.statIcon}/>
@@ -193,7 +199,7 @@ export default function AdminDashboardPage() {
                                 </h2>
                             </div>
                         </div>
-                    })}
+                    )   )}
 
                 </section>
                 <section className={s.tablesGrid}>
@@ -243,9 +249,188 @@ export default function AdminDashboardPage() {
                         <h2 className={`${s.tableTitle}${s.sectionTitleSpacing}`}>
                             <clock className={s.tableTitleIcon} />withdrawal Request
                         </h2>
+                        <div className={s.withdrawalList}>
+                            {(dashboard?.withdrawals || []).map((withdrawal) => {
+                                const isWithdrawalLocked = isTerminalWithdrawalStatus(withdrawal.status);
+                                return (
+                                    <div key={withdrawal._id} className={s.withdrawalItem}>
+                                        <div>className={s.withdrawalProviderName}
+                                        <div >
+                                            <p className={s.withdrawalProviderName}>
+                                                {withdrawal.provider.businessName || withdrawal.provider.name}
+                                            </p>
+                                        </div>
+                                          
+                                        <p className={s.withdrawalProviderEmail}>
+                                            {withdrawal.userId?.email}
+                                        </p>
+                                        <div className={s.withdrawalAmountCol}>
+                                            <span className={s.withdrawalAmount}>
+                                                {formatMoney(withdrawal.amount)}
+                                            </span>
+                                            <div className={s.withdrawalStatussWra}>
+                                                <span className={`${s.withdrawalStatusBadge}${getWithdrawalStatusClass(withdrawal.status)}`}>
+                                                    {withdrawal.status}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        </div>
+                                        <div className={s.withdrawalAccountIcon}>
+                                            <Landmark className={s.withdrawalAccountIcon} />
+                                            {withdrawal.payoutSnapshot?.bankname ||
+                                                "UPI Connection"
+                                            }{" "}
+                                            *{" "}
+                                            {withdrawal.payoutSnapshot?.accountNumber?.slice(-4) ||
+                                                withdrawal.payoutSnapshot?.upiId}
+                                        </div>
+                                        <div className="s.withdrawalActions">
+                                            {
+                                                withdrawalStatuses.map((status) => { 
+                                                    const isCurrentStatus = withdrawal.status === status;
+                                                    const isUpdatingThisWithdrawal = updateWithdrawalId === withdrawal._id; 
+
+                                                    return (
+                                                        <button
+                                                            key={status}
+                                                            className={`${s.withdrawalActionBtn}${isCurrentStatus ? s.withdrawalActionBtnActive : ""}`}
+                                                            disabled={isWithdrawalLocked || isUpdatingThisWithdrawal||isUpdatingThisWithdrawal}
+                                                            onClick={() => requestWithdrawalStatusChange(withdrawal, status)}
+                                                        >
+                                                            {isUpdatingThisWithdrawal && pendingWithdrawalAction?.status === status ? "Updating..." : formatStatusLabel(status)}
+                                                        </button>
+                                                    )
+                                                })}
+                                            {dashboard?.withdrawals?.length == 0 && (
+                                                <div className={s.emptyWithdrawals}>
+                                                    <div className={s.emptyWithdrawalsIconCircle}>
+                                                        <checkCircle className={s.emptyWithdrawalsIcon}>
+                                                            <div>
+                                                                <p className={s.emptyWithdrawalsText}>
+                                                                    No pending withdrawals request
+                                                                </p>
+                                                            </div>
+                                                        </checkCircle>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        </div>
+                                )
+                            })}
+                        </div>
                     </div>
                 </section>
-            </main>
+                  {/* Recent bookings table */}
+        <section className={s.recentBookingsCard}>
+          <h2 className={`${s.tableTitle} ${s.sectionTitleSpacing}`}>
+            <checkCircle className={s.tableTitleIcon} /> Recent Paid Bookings
+          </h2>
+          <div className={s.tableScrollContainer}>
+            <table className={s.table}>
+              <thead>
+                <tr className={s.tableHeadRow}>
+                  <th className={s.th}>Provider</th>
+                  <th className={s.th}>Service</th>
+                  <th className={s.th}>Gross</th>
+                  <th className={s.th}>Fees</th>
+                  <th className={s.th}>Provider Share</th>
+                  <th className={s.th}>Status</th>
+                </tr>
+              </thead>
+              <tbody className={s.tbody}>
+                {(dashboard?.recentBookings || []).map((booking) => (
+                  <tr key={booking._id} className={s.tr}>
+                    <td className={s.tdBold}>
+                      {booking.userId?.businessName || booking.userId?.name}
+                    </td>
+                    <td className={s.tdMuted}>
+                      {booking.serviceId?.name || "Service"}
+                    </td>
+                    <td className={s.tdBold}>{formatMoney(booking.amount)}</td>
+                    <td className={s.tdFees}>
+                      {formatMoney(booking.platformFeeAmount)}
+                    </td>
+                    <td className={s.tdEarnings}>
+                      {formatMoney(booking.providerPayoutAmount)}
+                    </td>
+                    <td className={s.td}>
+                      <span className={s.bookingPayoutBadge}>
+                        {booking.payoutStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {dashboard && dashboard.recentBookings?.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className={s.emptyTableCell}>
+                      No recent transactions.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      {pendingWithdrawalAction && (
+        <div className={s.confirmModalOverlay}>
+          <div
+            className={s.confirmModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="withdrawal-confirm-title"
+          >
+            <div className={s.confirmModalIconRow}>
+              <span className={s.confirmModalIconWrap}>
+                <WithdrawalConfirmIcon className={s.confirmModalIcon} />
+              </span>
+              <span
+                className={`${s.withdrawalStatusBadge} ${getWithdrawalStatusClass(pendingWithdrawalAction.status)}`}
+              >
+                {pendingWithdrawalAction.status}
+              </span>
+            </div>
+            <h3 id="withdrawal-confirm-title" className={s.confirmModalTitle}>
+              Confirm withdrawal status
+            </h3>
+            <p className={s.confirmModalText}>
+              Are you sure you want to mark this withdrawal as{" "}
+              {formatStatusLabel(pendingWithdrawalAction.status)}?
+            </p>
+            <div className={s.confirmModalMeta}>
+              <span>
+                {pendingWithdrawal?.userId?.businessName ||
+                  pendingWithdrawal?.userId?.name ||
+                  "Provider"}
+              </span>
+              <strong>{formatMoney(pendingWithdrawal?.amount)}</strong>
+            </div>
+            <div className={s.confirmModalActions}>
+              <button
+                type="button"
+                onClick={closeWithdrawalConfirm}
+                disabled={isConfirmingWithdrawal}
+                className={s.confirmModalCancelBtn}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button"
+                onClick={changeWithdrawalStatus}
+                disabled={isConfirmingWithdrawal}
+                className={s.confirmModalConfirmBtn}
+              >
+                {isConfirmingWithdrawal
+                  ? "Confirming..."
+                  : `Confirm ${formatStatusLabel(pendingWithdrawalAction.status)}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+            
         </div>
     )
 }

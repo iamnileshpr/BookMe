@@ -1,5 +1,6 @@
-import { timeToMinute } from "./time.js";
+import { timeToMinutes } from './time.js';
 
-export const timeOverlap = (firstStart, firstEnd, secondStart, secondEnd) => {
-    return timeToMinute(firstStart) < timeToMinute(secondEnd) && timeToMinute(secondStart) < timeToMinute(secondEnd);
-}
+export const timesOverlap = (firstStart, firstEnd, secondStart, secondEnd) => {
+    return timeToMinutes(firstStart) < timeToMinutes(secondEnd) &&
+        timeToMinutes(firstEnd) > timeToMinutes(secondStart);
+};
