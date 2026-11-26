@@ -1,56 +1,58 @@
-import express from 'express'
-import cors from 'cors'
-import 'dotenv/config'
-import http from 'http'
-import { connectDB } from './config/db.js'
+import express from 'express';
+import cors from 'cors';
+import 'dotenv/config';
+import http from 'http';
+import { connectDB } from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import availabilityRoutes from './routes/availabilityRoutes.js';
+import bookingRoutes from './routes/bookingRoutes.js';
+import integrationRoutes from './routes/integrationRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import publicRoutes from './routes/publicRoutes.js';
+import serviceRoutes from './routes/serviceRoutes.js';
 
-const app = express()
+const app = express();
+const PORT = 5001;
 
 // DB
-connectDB()
+connectDB();
 
-// Middleware
-app.use(cors())
-app.use(express.json())
+//Middleware
+
+app.use(cors());
+app.use(express.json());
+
 
 // Routes
+
 app.get('/', (req, res) => {
-    res.send('API Working!')
-})
+    res.send('API Working!');
+});
 
-app.use('/api/auth', (await
-    import ('./routes/authRoutes.js')).default)
-app.use('/api/admin', (await
-    import ('./routes/adminRoutes.js')).default)
-app.use('/api/services', (await
-    import ('./routes/serviceRoutes.js')).default)
-app.use('/api/availability', (await
-    import ('./routes/availabilityRoutes.js')).default)
-app.use('/api/bookings', (await
-    import ('./routes/bookingRoutes.js')).default)
-app.use('/api/integrations', (await
-    import ('./routes/integrationRoutes.js')).default)
-app.use('/api/payments', (await
-    import ('./routes/paymentRoutes.js')).default)
-app.use('/api/public', (await
-    import ('./routes/publicRoutes.js')).default)
-app.use('/public', (await
-    import ('./routes/publicRoutes.js')).default)
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/availability', availabilityRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/integrations', integrationRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/public', publicRoutes);
+app.use('/public', publicRoutes);
 
-const PORT = 5001
-const server = http.createServer(app)
+const server = http.createServer(app);
 
 server.on('error', (error) => {
     if (error.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use. Stop the existing backend process or set a different PORT in backend/.env.`)
-        process.exit(1)
+        console.error(`Port ${PORT} is already in use. Stop the existing backend process or set a different PORT in backend/.env.`);
+        process.exit(1);
     }
 
-    throw error
-})
+    throw error;
+});
 
 server.listen(PORT, () => {
-    console.log(`Server Started on http://localhost:${PORT}`)
-})
+    console.log(`Server Started on http://localhost:${PORT}`);
+});
 
-export default app
+export default app;

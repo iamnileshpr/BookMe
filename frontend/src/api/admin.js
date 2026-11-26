@@ -1,39 +1,26 @@
-import axios from "axios";
+import axios from 'axios';
 
 const adminClient = axios.create({
-    baseURL: "http://localhost:5000/api/admin",
-    headers: {
-        "Content-Type": "application/json",
-    },
+    baseURL: 'http://localhost:5000/api',
 });
 
 adminClient.interceptors.request.use((config) => {
-    const token = localStorage.getItem("adminToken");
-
+    const token = localStorage.getItem('adminToken');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
-
     return config;
 });
 
-export const adminLogin = (data) => {
-    const jsonData = JSON.stringify({
-        email: data.email,
-        password: data.password
-    });
+adminClient.interceptors.response.use((response) => {
+    const token = response.data && response.data.token;
+    if (token) {
+        localStorage.setItem('adminToken', token);
+    }
 
-    console.log("FINAL JSON:", jsonData);
+    return response;
+});
 
-    return adminClient.post("/login", jsonData);
-};
-
-export const getAdminDashboard = async() => {
-    const { data } = await adminClient.get("/dashboard");
-    return data;
-};
-
-export const updateWithdrawalStatus = (id, data) =>
-    adminClient.patch(`/withdrawals/${id}/status`, data);
-
-export default adminClient;
+export const adminLogin = (data) => adminClient.post('/admin/login', data);
+export const getAdminDashboard = () => adminClient.get('/admin/dashboard');
+export const updateWithdrawalStatus = (id, data) => adminClient.patch(`/admin/withdrawals/${id}`, data);

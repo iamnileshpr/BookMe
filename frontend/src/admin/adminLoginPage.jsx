@@ -2,7 +2,7 @@
   import { useNavigate } from "react-router-dom";
   import { adminLogin } from "../api/admin.js";
   import logo from "../assets/logo.png";
-  import { adminLoginPageStyles as s } from "../assets/dummyStyles.js";
+  import { adminLoginPageStyles as s } from "../assets/dummyStyles.jsx";
 
   export default function AdminLoginPage() {
     const navigate = useNavigate();
