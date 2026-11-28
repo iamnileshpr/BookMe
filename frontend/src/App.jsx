@@ -12,7 +12,7 @@ import PaymentsPage from './Pages/PaymentsPage';
 import PrivacyPolicyPage from './Pages/PrivacyPolicyPage';
 import TermsOfServicePage from './Pages/TermsOfServicePage';
 import AdminDashboardPage from './admin/adminDashboard';
-import AdminLoginPage from './admin/AdminLoginPage';
+import AdminLoginPage from './admin/adminLoginPage';
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();

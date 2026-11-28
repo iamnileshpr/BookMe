@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import User from '../models/UserNew.js';
 import WalletTransaction from '../models/WalletTransaction.js';
 import Withdrawal from '../models/Withdrawal.js';
-import { getWalletSummary } from '../utils/wallet.js';
+import { getWalletSummary } from '../utils/Wallet.js';
 
 const toObjectId = (id) => new mongoose.Types.ObjectId(String(id));
 
